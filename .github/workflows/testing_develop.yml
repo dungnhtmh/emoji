@@ -49,6 +49,18 @@ jobs:
     environment: stage
     needs: [prepare]
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init
+        working-directory: "stage"
+
       - name: Terraform Apply
         run: terraform apply -auto-approve -input=false
         working-directory: "stage"
@@ -58,6 +70,18 @@ jobs:
     environment: production
     needs: [prepare,stage]
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init
+        working-directory: "production"
+
       - name: Terraform Apply
         run: terraform apply -auto-approve -input=false
         working-directory: "production"
