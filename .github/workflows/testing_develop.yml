@@ -3,28 +3,61 @@ name: Testing develop
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init
+        working-directory: "stage"
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: "stage"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: "stage"
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request'
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+        working-directory: "stage"
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
   stage:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: stage
+    needs: [prepare]
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: deploy
-        run: echo "stage"
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+        working-directory: "stage"
   production:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
-    needs: [stage]
+    needs: [prepare,stage]
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: deploy
-        run: echo "production"
+      - name: Terraform Apply
+        run: terraform apply -auto-approve -input=false
+        working-directory: "production"
