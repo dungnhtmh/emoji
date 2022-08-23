@@ -7,13 +7,24 @@ on:
       - main
 
 jobs:
-  deployment:
+  stage:
     runs-on: ubuntu-latest
-    environment: production
+    environment: stage
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: deploy
-        run: echo "abc"
+        run: echo "stage"
+  production:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: [stage]
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: deploy
+        run: echo "production"
