@@ -76,7 +76,7 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
   stage:
-    name: Deploy to stage
+    name: Deploy to stage(test)
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: stage
